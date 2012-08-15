@@ -67,15 +67,20 @@ public class StringBuilderV1Tester {
 
     public static void main(String[] args) {
         //Please run these class testing separately and avoid the GC involve impact the performance counter.
+        StringBuilderV1Tester buildTester = new StringBuilderV1Tester();
         for (int i = 0; i < 10; ++i) {
-            new StringBuilderV1Tester().testStringBuilderWithCharArray();
+            long freeMemory = Runtime.getRuntime().freeMemory();
+            buildTester.testStringBuilderWithCharArray();
+            System.out.println("V1 Memory Cost:" + (Runtime.getRuntime().freeMemory() - freeMemory));
             System.gc();
         }
 
         System.gc();
         System.gc();
         for (int i = 0; i < 10; ++i) {
-            new StringBuilderV1Tester().testStringBuilderV1WithCharArray();
+            long freeMemory = Runtime.getRuntime().freeMemory();
+            buildTester.testStringBuilderV1WithCharArray();
+            System.out.println("V1 Memory Cost:" + (Runtime.getRuntime().freeMemory() - freeMemory));
             System.gc();
         }
     }

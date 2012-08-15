@@ -37,12 +37,6 @@ public class StringBuilderV1 {
     private int pos;
     private int capacity;
 
-    private static final int SIZE_OF_CHAR = 2;
-    private static final int SIZE_OF_INT = 4;
-    //private static final int SIZE_OF_FLOAT = 4;
-    //private static final int SIZE_OF_DOUBLE = 8;
-    private static final int SIZE_OF_LONG = 8;
-
     public StringBuilderV1() {
         capacity = 16;
         charArray = new char[capacity];
