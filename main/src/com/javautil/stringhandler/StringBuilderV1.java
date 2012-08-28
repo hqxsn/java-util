@@ -3,6 +3,7 @@ package com.javautil.stringhandler;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 
 /**
  * Created with TwinsFactory.
@@ -38,13 +39,19 @@ public class StringBuilderV1 {
     private int capacity;
 
     public StringBuilderV1() {
-        capacity = 16;
+        capacity = 64;
+        charArray = new char[capacity];
+        pos = 0;
+    }
+
+    public StringBuilderV1(int capacity) {
+        this.capacity = capacity;
         charArray = new char[capacity];
         pos = 0;
     }
 
     void expandCapacity(int minimumCapacity) {
-        int newCapacity = (charArray.length + 1) * 2;
+        int newCapacity = (charArray.length + 1) * 3;
         if (newCapacity < 0 || newCapacity == Integer.MAX_VALUE) {
             newCapacity = Integer.MAX_VALUE;
         } else if (minimumCapacity > newCapacity) {
@@ -62,20 +69,30 @@ public class StringBuilderV1 {
             append("-2147483648");
             return this;
         }
-        int appendedLength = (i < 0) ? Helper.stringSize(-i) + 1
-                                     : Helper.stringSize(i);
+        int appendedLength = (i < 0) ? IntToString.stringSize(-i) + 1
+                                     : IntToString.stringSize(i);
         int spaceNeeded = pos + appendedLength;
         if (spaceNeeded > capacity)
             expandCapacity(spaceNeeded);
-        Helper.getChars(i, spaceNeeded, charArray);
+        IntToString.getChars(i, spaceNeeded, charArray);
         pos = spaceNeeded;
         return this;
     }
 
     public StringBuilderV1 append(long l) {
-
-
+        if (l == Integer.MIN_VALUE) {
+            append("-9223372036854775808");
+            return this;
+        }
+        int appendedLength = (l < 0) ? LongToString.stringSize(-l) + 1
+                                     : LongToString.stringSize(l);
+        int spaceNeeded = pos + appendedLength;
+        if (spaceNeeded > capacity)
+            expandCapacity(spaceNeeded);
+        LongToString.getChars(l, spaceNeeded, charArray);
+        pos = spaceNeeded;
         return this;
+
     }
 
     public StringBuilderV1 append(float f) {
@@ -92,14 +109,16 @@ public class StringBuilderV1 {
     public StringBuilderV1 append(char[] str, int offset, int len) {
         long bytesToCopy = len << 1;
 
-         if ((pos + len) > capacity) {
+        if ((pos + len) > capacity) {
             //long beginTime = System.nanoTime();
             expandCapacity(pos + len);
             //System.out.println("expand capacity: " + (System.nanoTime() - beginTime));
         }
 
-        unsafe.copyMemory(str, charArrayOffset + offset, charArray, charArrayOffset + pos, bytesToCopy);
-        pos = (int) (pos + len);
+        int snapPos = pos;
+        //System.arraycopy(str, offset, charArray, pos, len);
+        unsafe.copyMemory(str, charArrayOffset, charArray, charArrayOffset + (snapPos << 1) , bytesToCopy);
+        pos = (int) ((snapPos << 1) + bytesToCopy) >> 1;
         return this;
     }
 
@@ -127,13 +146,19 @@ public class StringBuilderV1 {
     }
 
     public String toString() {
-        return new String(charArray, 0, pos >> 1);
+        return new String(charArray, 0, pos);
     }
 
 
-
     public static void main(String[] args) throws InstantiationException {
+        char[] src = {'h', 'e', 'l', 'l', 'o', ',', 't', 'h', 'i', 's'};
 
+        StringBuilderV1 stringBuilderV1 = new StringBuilderV1();
+
+        stringBuilderV1.append("hello,this is a test");
+        stringBuilderV1.append(src);
+
+        System.out.println(stringBuilderV1.toString());
 
     }
 
